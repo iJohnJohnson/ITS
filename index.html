@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#333" />
+  <title>Offline Inventory Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+	<button id="theme-toggle" aria-label="Toggle dark mode" style="position: fixed; top: 10px; right: 10px; font-size: 1.5rem; background: none; border: none; cursor: 	pointer;">
+  	🌞
+	</button>
+
+  <h1>Inventory Tracker</h1>
+
+  <!-- Inventory Input Form -->
+  <form id="item-form">
+    <input type="text" id="partNumber" placeholder="Part Number" required />
+    <input type="number" id="quantity" placeholder="Quantity" required />
+    <input type="text" id="location" placeholder="Location" required />
+    <button type="submit" id="submitBtn">Add Item</button>
+  </form>
+
+  <!-- QR Code Scanner -->
+  <section>
+    <div id="reader" style="width: 300px;"></div>
+    <button onclick="startScanner()">Start Scan</button>
+    <p id="scan-result"></p>
+  </section>
+
+  <!-- Inventory List -->
+  <h2>Inventory</h2>
+  <ul id="inventory-list"></ul>
+
+  <!-- Scripts -->
+  <script src="libs/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/dexie@3.2.3/dist/dexie.min.js"></script>
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("✅ Service Worker Registered"))
+        .catch(err => console.error("❌ Service Worker failed:", err));
+    }
+  </script>
+</body>
+</html>
