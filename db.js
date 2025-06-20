@@ -54,7 +54,7 @@ async function displayItems() {
     li.innerHTML = `
       #${item.id}: <strong>${item.partNumber}</strong> - ${item.quantity} at ${item.location}
       <button onclick="editItem(${item.id})">✏️</button>
-      <button onclick="deleteItem(${item.id})">🗑️</button>
+      <button onclick="confirmDelete(${item.id})">🗑️</button>
     `;
     list.appendChild(li);
   });
