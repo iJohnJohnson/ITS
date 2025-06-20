@@ -20,8 +20,10 @@ document.getElementById("item-form").addEventListener("submit", async function (
   this.reset();
 });
 
+
 function startScanner() {
   const html5QrCode = new Html5Qrcode("reader");
+
   html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 250 },
@@ -30,11 +32,15 @@ function startScanner() {
       document.getElementById("partNumber").value = decodedText;
       html5QrCode.stop(); // stop after one scan
     },
-    error => {
-      // optional: handle errors
+    (errorMessage) => {
+      console.warn("QR scan error", errorMessage);
     }
-  );
+  ).catch(err => {
+    console.error("Failed to start QR scanner:", err);
+    alert("Could not start QR scanner. Make sure you allow camera access.");
+  });
 }
+
 
 async function editItem(id) {
   const item = await db.items.get(id);
