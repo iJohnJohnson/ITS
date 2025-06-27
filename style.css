@@ -10,12 +10,13 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Light Theme */
 body {
   background-color: #fff;
   color: #111;
 }
 
-/* Dark mode */
+/* Dark Theme */
 body.dark-theme {
   background-color: #121212;
   color: #eee;
@@ -28,7 +29,7 @@ body.dark-theme button {
   border-color: #444;
 }
 
-/* Layout structure */
+/* Header */
 #header {
   height: 15vh;
   background-color: #444;
@@ -39,6 +40,7 @@ body.dark-theme button {
   padding: 0 2rem;
 }
 
+/* Footer */
 #footer {
   height: 15vh;
   background-color: #333;
@@ -48,9 +50,11 @@ body.dark-theme button {
   justify-content: center;
 }
 
+/* Main layout area */
 #main {
-  display: flex;
   height: 70vh;
+  display: flex;
+  flex-direction: row;
 }
 
 /* Sidebar */
@@ -61,7 +65,7 @@ body.dark-theme button {
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: start;
 }
 
 #sidebar ul {
@@ -73,18 +77,20 @@ body.dark-theme button {
   cursor: pointer;
 }
 
-/* Content area */
+/* Content area next to sidebar */
 #content {
-  display: flex;
   width: 90%;
-  padding: 1rem;
+  display: flex;
+  flex-direction: row;
   gap: 1rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
 }
 
-/* Containers */
 #containerMiddle, #containerRight {
   flex: 1;
-  border: 2px dashed #ccc;
+  background-color: #e0e0e0;
+  border: 2px dashed #aaa;
   padding: 1rem;
   overflow-y: auto;
 }
