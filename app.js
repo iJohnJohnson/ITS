@@ -115,6 +115,9 @@ function createMachineCard(machine, index) {
 deleteBtn.addEventListener("click", () => {
   if (selectedMachineIndex === null) return;
 
+  const confirmed = confirm("Are you sure you want to delete this machine?");
+  if (!confirmed) return;
+
   // Remove from array
   machines.splice(selectedMachineIndex, 1);
 
@@ -122,7 +125,7 @@ deleteBtn.addEventListener("click", () => {
   machineList.innerHTML = "";
   machines.forEach((m, i) => createMachineCard(m, i));
 
-  // Reset details and button
+  // Reset state
   selectedMachineIndex = null;
   deleteBtn.classList.add("disabled");
   machineDetails.name.textContent = "-";
