@@ -1,18 +1,37 @@
 // app.js
 
-// Load theme on page load
-document.addEventListener("DOMContentLoaded", () => {
-  const currentTheme = localStorage.getItem("theme");
-  if (currentTheme === "dark") {
+function setThemeMode(mode) {
+  if (mode === "dark") {
     document.body.classList.add("dark-theme");
+  } else {
+    document.body.classList.remove("dark-theme");
+  }
+  localStorage.setItem("theme", mode);
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle("dark-theme");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Load saved theme
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    setThemeMode("dark");
   }
 
-  // Listen for key press (D to toggle)
+  // Keyboard shortcut (Ctrl+D)
   document.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === "d") {
-      document.body.classList.toggle("dark-theme");
-      const newTheme = document.body.classList.contains("dark-theme") ? "dark" : "light";
-      localStorage.setItem("theme", newTheme);
+    if (e.ctrlKey && e.key.toLowerCase() === "d") {
+      e.preventDefault(); // Prevent browser bookmark or other default
+      toggleTheme();
     }
   });
+
+  // Sidebar click toggle
+  const sidebarToggle = document.getElementById("theme-toggle-sidebar");
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener("click", toggleTheme);
+  }
 });
