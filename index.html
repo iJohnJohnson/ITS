@@ -16,7 +16,7 @@
     <div id="sidebar">
       <ul>
         <li>Dashboard</li>
-        <li>Add Machine</li>
+        <li id="add-machine-btn">Add Machine</li>
         <li id="theme-toggle-sidebar">Toggle Theme</li>
         <li>Smart Scan</li>
         <li>Delete Item</li>
@@ -27,10 +27,19 @@
       <div id="containerMiddle">
         <h2>Middle Container</h2>
         <!-- List of Inventory or Machines -->
+        <div id="machine-list"></div>
       </div>
+
       <div id="containerRight">
         <h2>Right Container</h2>
         <!-- Detail view of selected item -->
+         <div id="machine-details">
+          <p><strong>Machine Name:</strong> <span id="detail-name">-</span></p>
+          <p><strong>Part Number:</strong> <span id="detail-part">-</span></p>
+          <p><strong>Quantity:</strong> <span id="detail-qty">-</span></p>
+          <p><strong>Location:</strong> <span id="detail-loc">-</span></p>
+        </div>
+
       </div>
     </div>
   </div>

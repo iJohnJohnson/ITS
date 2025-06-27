@@ -35,3 +35,50 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarToggle.addEventListener("click", toggleTheme);
   }
 });
+
+
+
+// Add Machines
+const machineList = document.getElementById("machine-list");
+const machineDetails = {
+  name: document.getElementById("detail-name"),
+  part: document.getElementById("detail-part"),
+  qty: document.getElementById("detail-qty"),
+  loc: document.getElementById("detail-loc")
+};
+
+const machines = []; // temp in-memory store
+
+function createMachineCard(machine, index) {
+  const div = document.createElement("div");
+  div.classList.add("machine-card");
+  div.textContent = machine.name;
+  div.addEventListener("click", () => {
+    machineDetails.name.textContent = machine.name;
+    machineDetails.part.textContent = machine.part;
+    machineDetails.qty.textContent = machine.quantity;
+    machineDetails.loc.textContent = machine.location;
+  });
+  machineList.appendChild(div);
+}
+
+document.getElementById("add-machine-btn").addEventListener("click", () => {
+  const name = prompt("Enter Machine Name:");
+  if (!name) return;
+  const part = prompt("Enter Part Number:");
+  if (!part) return;
+  const quantity = prompt("Enter Quantity:");
+  if (!quantity) return;
+  const location = prompt("Enter Location:");
+  if (!location) return;
+
+  const newMachine = {
+    name,
+    part,
+    quantity,
+    location
+  };
+
+  machines.push(newMachine);
+  createMachineCard(newMachine, machines.length - 1);
+});
