@@ -82,3 +82,51 @@ document.getElementById("add-machine-btn").addEventListener("click", () => {
   machines.push(newMachine);
   createMachineCard(newMachine, machines.length - 1);
 });
+
+
+
+
+let selectedMachineIndex = null;
+
+const deleteBtn = document.getElementById("delete-machine-btn");
+
+function createMachineCard(machine, index) {
+  const div = document.createElement("div");
+  div.classList.add("machine-card");
+  div.textContent = machine.name;
+  div.dataset.index = index;
+
+  div.addEventListener("click", () => {
+    selectedMachineIndex = index;
+
+    // Show details
+    machineDetails.name.textContent = machine.name;
+    machineDetails.part.textContent = machine.part;
+    machineDetails.qty.textContent = machine.quantity;
+    machineDetails.loc.textContent = machine.location;
+
+    // Enable delete
+    deleteBtn.classList.remove("disabled");
+  });
+
+  machineList.appendChild(div);
+}
+
+deleteBtn.addEventListener("click", () => {
+  if (selectedMachineIndex === null) return;
+
+  // Remove from array
+  machines.splice(selectedMachineIndex, 1);
+
+  // Clear list and rebuild
+  machineList.innerHTML = "";
+  machines.forEach((m, i) => createMachineCard(m, i));
+
+  // Reset details and button
+  selectedMachineIndex = null;
+  deleteBtn.classList.add("disabled");
+  machineDetails.name.textContent = "-";
+  machineDetails.part.textContent = "-";
+  machineDetails.qty.textContent = "-";
+  machineDetails.loc.textContent = "-";
+});

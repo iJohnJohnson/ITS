@@ -75,7 +75,15 @@ body.dark-theme button {
 #sidebar li {
   margin: 1rem 0;
   cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.3s ease;
 }
+
+#sidebar li.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 
 /* Content area next to sidebar */
 #content {
