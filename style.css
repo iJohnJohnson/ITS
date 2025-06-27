@@ -1,23 +1,26 @@
-body {
-  font-family: sans-serif;
-  padding: 1em;
-  background: #f4f4f4;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Default light theme */
-body {
-  background-color: #fff;
-  color: #111;
+html, body {
+  height: 100%;
+  font-family: sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Dark theme */
+body {
+  background-color: #fff;
+  color: #111;
+}
+
+/* Dark mode */
 body.dark-theme {
   background-color: #121212;
   color: #eee;
 }
 
-/* Optional: style buttons and inputs to adapt */
 body.dark-theme input,
 body.dark-theme button {
   background-color: #222;
@@ -25,20 +28,72 @@ body.dark-theme button {
   border-color: #444;
 }
 
-
-form {
-  margin-bottom: 1em;
+/* Layout structure */
+#header {
+  height: 15vh;
+  background-color: #444;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
 }
 
-input {
-  padding: 0.5em;
-  margin: 0.2em;
+#footer {
+  height: 15vh;
+  background-color: #333;
+  color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-button {
-  padding: 0.5em 1em;
+#main {
+  display: flex;
+  height: 70vh;
 }
 
-#inventory-list li {
-  margin: 0.5em 0;
+/* Sidebar */
+#sidebar {
+  width: 10%;
+  background-color: #555;
+  color: #fff;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+#sidebar ul {
+  list-style: none;
+}
+
+#sidebar li {
+  margin: 1rem 0;
+  cursor: pointer;
+}
+
+/* Content area */
+#content {
+  display: flex;
+  width: 90%;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+/* Containers */
+#containerMiddle, #containerRight {
+  flex: 1;
+  border: 2px dashed #ccc;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+/* Theme toggle button */
+#theme-toggle {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
 }
