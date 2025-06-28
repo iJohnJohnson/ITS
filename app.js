@@ -43,12 +43,13 @@ const machineList = document.getElementById("machine-list");
 const partList = document.getElementById("part-list");
 const deleteBtn = document.getElementById("delete-machine-btn");
 const addDetailBtn = document.getElementById("add-detail-btn");
+const editBtn = document.getElementById("edit-btn");
 
 const machines = [];
 let selectedMachineIndex = null;
 let selectedPartIndex = null;
 
-// Render machine list in middle container
+// Render Machines in Middle Container
 function renderMachineList() {
   machineList.innerHTML = "";
 
@@ -58,20 +59,22 @@ function renderMachineList() {
     div.textContent = machine.name;
 
     div.addEventListener("click", (e) => {
-      e.stopPropagation(); // prevent global click
+      e.stopPropagation();
       selectedMachineIndex = index;
       selectedPartIndex = null;
+
       renderPartList(machine.parts);
 
       deleteBtn.classList.remove("disabled");
       addDetailBtn.classList.remove("disabled");
+      editBtn.classList.remove("disabled");
     });
 
     machineList.appendChild(div);
   });
 }
 
-// Render parts in right container
+// Render Parts in Right Container
 function renderPartList(parts) {
   partList.innerHTML = "";
 
@@ -90,30 +93,27 @@ function renderPartList(parts) {
     `;
 
     partDiv.addEventListener("click", (e) => {
-      e.stopPropagation(); // prevent deselection
+      e.stopPropagation();
       selectedPartIndex = index;
+
       deleteBtn.classList.remove("disabled");
+      editBtn.classList.remove("disabled");
     });
 
     partList.appendChild(partDiv);
   });
 }
 
-// Add a new machine
+// Add New Machine
 document.getElementById("add-machine-btn").addEventListener("click", () => {
   const name = prompt("Enter Machine Name:");
   if (!name) return;
 
-  const newMachine = {
-    name,
-    parts: []
-  };
-
-  machines.push(newMachine);
+  machines.push({ name, parts: [] });
   renderMachineList();
 });
 
-// Add detail to selected machine
+// Add Machine Detail
 addDetailBtn.addEventListener("click", () => {
   if (selectedMachineIndex === null) return;
 
@@ -126,17 +126,11 @@ addDetailBtn.addEventListener("click", () => {
   const location = prompt("Enter Location:");
   if (!location) return;
 
-  const part = {
-    partNumber,
-    quantity,
-    location
-  };
-
-  machines[selectedMachineIndex].parts.push(part);
+  machines[selectedMachineIndex].parts.push({ partNumber, quantity, location });
   renderPartList(machines[selectedMachineIndex].parts);
 });
 
-// Delete either machine or part depending on selection
+// Delete Machine or Part
 deleteBtn.addEventListener("click", () => {
   if (selectedPartIndex !== null && selectedMachineIndex !== null) {
     const confirmPart = confirm("Delete this machine detail?");
@@ -146,6 +140,7 @@ deleteBtn.addEventListener("click", () => {
     selectedPartIndex = null;
     renderPartList(machines[selectedMachineIndex].parts);
     deleteBtn.classList.add("disabled");
+    editBtn.classList.add("disabled");
     return;
   }
 
@@ -160,10 +155,45 @@ deleteBtn.addEventListener("click", () => {
     partList.innerHTML = "<p>No machine selected.</p>";
     deleteBtn.classList.add("disabled");
     addDetailBtn.classList.add("disabled");
+    editBtn.classList.add("disabled");
   }
 });
 
-// Click outside: deselect all
+// Edit Machine or Part
+editBtn.addEventListener("click", () => {
+  if (selectedPartIndex !== null && selectedMachineIndex !== null) {
+    const machine = machines[selectedMachineIndex];
+    const part = machine.parts[selectedPartIndex];
+
+    const newPartNumber = prompt("Edit Part Number:", part.partNumber);
+    if (!newPartNumber) return;
+
+    const newQty = prompt("Edit Quantity:", part.quantity);
+    if (!newQty) return;
+
+    const newLoc = prompt("Edit Location:", part.location);
+    if (!newLoc) return;
+
+    part.partNumber = newPartNumber;
+    part.quantity = newQty;
+    part.location = newLoc;
+
+    renderPartList(machine.parts);
+    return;
+  }
+
+  if (selectedMachineIndex !== null) {
+    const machine = machines[selectedMachineIndex];
+
+    const newName = prompt("Edit Machine Name:", machine.name);
+    if (!newName) return;
+
+    machine.name = newName;
+    renderMachineList();
+  }
+});
+
+// Deselect on background click
 document.addEventListener("click", (e) => {
   const isClickInsideMachineList = machineList.contains(e.target);
   const isClickInsidePartList = partList.contains(e.target);
@@ -171,8 +201,11 @@ document.addEventListener("click", (e) => {
   if (!isClickInsideMachineList && !isClickInsidePartList) {
     selectedMachineIndex = null;
     selectedPartIndex = null;
+
     deleteBtn.classList.add("disabled");
     addDetailBtn.classList.add("disabled");
+    editBtn.classList.add("disabled");
+
     partList.innerHTML = "<p>No machine selected.</p>";
   }
 });
