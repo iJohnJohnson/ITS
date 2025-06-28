@@ -146,3 +146,14 @@ body.dark-theme .machine-card:hover {
 body.dark-theme #part-list .machine-card {
   background-color: #1a1a1a;
 }
+
+/* Highlight last selected object/button */
+.machine-card.selected {
+  border: 2px solid #007bff;
+  background-color: #e6f0ff;
+}
+
+body.dark-theme .machine-card.selected {
+  border-color: #33aaff;
+  background-color: #1c2b3a;
+}

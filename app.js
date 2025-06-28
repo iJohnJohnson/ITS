@@ -63,6 +63,13 @@ function renderMachineList() {
       selectedMachineIndex = index;
       selectedPartIndex = null;
 
+      // Remove highlight from previous selection
+      document.querySelectorAll(".machine-card").forEach(card => {
+        card.classList.remove("selected");
+      });
+
+      div.classList.add("selected");
+
       renderPartList(machine.parts);
 
       deleteBtn.classList.remove("disabled");
@@ -70,9 +77,11 @@ function renderMachineList() {
       editBtn.classList.remove("disabled");
     });
 
+    });
+
     machineList.appendChild(div);
-  });
-}
+  };
+
 
 // Render Parts in Right Container
 function renderPartList(parts) {
@@ -92,17 +101,21 @@ function renderPartList(parts) {
       <strong>Loc:</strong> ${part.location}
     `;
 
-    partDiv.addEventListener("click", (e) => {
-      e.stopPropagation();
-      selectedPartIndex = index;
+      partDiv.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectedPartIndex = index;
 
-      deleteBtn.classList.remove("disabled");
-      editBtn.classList.remove("disabled");
-    });
+        // Remove highlight from all parts
+        partList.querySelectorAll(".machine-card").forEach(card => {
+          card.classList.remove("selected");
+        });
 
-    partList.appendChild(partDiv);
-  });
-}
+        partDiv.classList.add("selected");
+
+        deleteBtn.classList.remove("disabled");
+        editBtn.classList.remove("disabled");
+      });
+  })}
 
 // Add New Machine
 document.getElementById("add-machine-btn").addEventListener("click", () => {
@@ -207,5 +220,10 @@ document.addEventListener("click", (e) => {
     editBtn.classList.add("disabled");
 
     partList.innerHTML = "<p>No machine selected.</p>";
+
+    document.querySelectorAll(".machine-card").forEach(card => {
+      card.classList.remove("selected");
+    });
   }
 });
+
