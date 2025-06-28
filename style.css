@@ -157,3 +157,9 @@ body.dark-theme .machine-card.selected {
   border-color: #33aaff;
   background-color: #1c2b3a;
 }
+
+/* Drag/Drop */
+.machine-card.drag-over {
+  border: 2px dashed #007bff;
+  background-color: #d0e6ff;
+}

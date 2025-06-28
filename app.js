@@ -36,7 +36,6 @@ const partList = document.getElementById("part-list");
 const deleteBtn = document.getElementById("delete-machine-btn");
 const addDetailBtn = document.getElementById("add-detail-btn");
 const editBtn = document.getElementById("edit-btn");
-const moveBtn = document.getElementById("move-btn");
 
 const machines = [];
 let selectedMachineIndex = null;
@@ -49,6 +48,8 @@ function renderMachineList() {
     const div = document.createElement("div");
     div.classList.add("machine-card");
     div.textContent = machine.name;
+    div.setAttribute("draggable", true);
+    div.dataset.index = index;
 
     if (index === selectedMachineIndex) {
       div.classList.add("selected");
@@ -68,7 +69,34 @@ function renderMachineList() {
       deleteBtn.classList.remove("disabled");
       addDetailBtn.classList.remove("disabled");
       editBtn.classList.remove("disabled");
-      moveBtn.classList.remove("disabled");
+    });
+
+    // Drag events
+    div.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("type", "machine");
+      e.dataTransfer.setData("fromIndex", index);
+    });
+
+    div.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      div.classList.add("drag-over");
+    });
+
+    div.addEventListener("dragleave", () => {
+      div.classList.remove("drag-over");
+    });
+
+    div.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const from = parseInt(e.dataTransfer.getData("fromIndex"));
+      const to = index;
+
+      if (from !== to) {
+        const moved = machines.splice(from, 1)[0];
+        machines.splice(to, 0, moved);
+        selectedMachineIndex = to;
+        renderMachineList();
+      }
     });
 
     machineList.appendChild(div);
@@ -86,6 +114,8 @@ function renderPartList(parts) {
   parts.forEach((part, index) => {
     const partDiv = document.createElement("div");
     partDiv.classList.add("machine-card");
+    partDiv.setAttribute("draggable", true);
+    partDiv.dataset.index = index;
 
     if (index === selectedPartIndex) {
       partDiv.classList.add("selected");
@@ -108,7 +138,35 @@ function renderPartList(parts) {
 
       deleteBtn.classList.remove("disabled");
       editBtn.classList.remove("disabled");
-      moveBtn.classList.remove("disabled");
+    });
+
+    // Drag events
+    partDiv.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("type", "part");
+      e.dataTransfer.setData("fromIndex", index);
+    });
+
+    partDiv.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      partDiv.classList.add("drag-over");
+    });
+
+    partDiv.addEventListener("dragleave", () => {
+      partDiv.classList.remove("drag-over");
+    });
+
+    partDiv.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const from = parseInt(e.dataTransfer.getData("fromIndex"));
+      const to = index;
+
+      if (from !== to && selectedMachineIndex !== null) {
+        const partList = machines[selectedMachineIndex].parts;
+        const moved = partList.splice(from, 1)[0];
+        partList.splice(to, 0, moved);
+        selectedPartIndex = to;
+        renderPartList(partList);
+      }
     });
 
     partList.appendChild(partDiv);
@@ -141,7 +199,7 @@ addDetailBtn.addEventListener("click", () => {
   renderPartList(machines[selectedMachineIndex].parts);
 });
 
-// Delete Logic
+// Delete
 deleteBtn.addEventListener("click", () => {
   if (selectedPartIndex !== null && selectedMachineIndex !== null) {
     const confirmPart = confirm("Delete this machine detail?");
@@ -152,7 +210,6 @@ deleteBtn.addEventListener("click", () => {
     renderPartList(machines[selectedMachineIndex].parts);
     deleteBtn.classList.add("disabled");
     editBtn.classList.add("disabled");
-    moveBtn.classList.add("disabled");
     return;
   }
 
@@ -168,11 +225,10 @@ deleteBtn.addEventListener("click", () => {
     deleteBtn.classList.add("disabled");
     addDetailBtn.classList.add("disabled");
     editBtn.classList.add("disabled");
-    moveBtn.classList.add("disabled");
   }
 });
 
-// Edit Logic
+// Edit
 editBtn.addEventListener("click", () => {
   if (selectedPartIndex !== null && selectedMachineIndex !== null) {
     const part = machines[selectedMachineIndex].parts[selectedPartIndex];
@@ -201,41 +257,7 @@ editBtn.addEventListener("click", () => {
   }
 });
 
-// ✅ Move Logic
-moveBtn.addEventListener("click", () => {
-  if (selectedMachineIndex !== null && selectedPartIndex === null) {
-    const direction = prompt("Move machine 'up' or 'down'?").toLowerCase();
-    if (direction !== "up" && direction !== "down") return;
-
-    const newIndex = direction === "up" ? selectedMachineIndex - 1 : selectedMachineIndex + 1;
-    if (newIndex < 0 || newIndex >= machines.length) return;
-
-    const temp = machines[selectedMachineIndex];
-    machines[selectedMachineIndex] = machines[newIndex];
-    machines[newIndex] = temp;
-    selectedMachineIndex = newIndex;
-
-    renderMachineList();
-  }
-
-  if (selectedMachineIndex !== null && selectedPartIndex !== null) {
-    const parts = machines[selectedMachineIndex].parts;
-    const direction = prompt("Move detail 'up' or 'down'?").toLowerCase();
-    if (direction !== "up" && direction !== "down") return;
-
-    const newIndex = direction === "up" ? selectedPartIndex - 1 : selectedPartIndex + 1;
-    if (newIndex < 0 || newIndex >= parts.length) return;
-
-    const temp = parts[selectedPartIndex];
-    parts[selectedPartIndex] = parts[newIndex];
-    parts[newIndex] = temp;
-    selectedPartIndex = newIndex;
-
-    renderPartList(parts);
-  }
-});
-
-// Deselect on background click
+// Background click = deselect
 document.addEventListener("click", (e) => {
   const isInsideMachine = machineList.contains(e.target);
   const isInsidePart = partList.contains(e.target);
@@ -251,7 +273,6 @@ document.addEventListener("click", (e) => {
     deleteBtn.classList.add("disabled");
     addDetailBtn.classList.add("disabled");
     editBtn.classList.add("disabled");
-    moveBtn.classList.add("disabled");
 
     partList.innerHTML = "<p>No machine selected.</p>";
   }
