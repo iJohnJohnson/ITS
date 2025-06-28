@@ -330,7 +330,9 @@ document.addEventListener("click", (e) => {
     deleteBtn.classList.add("disabled");
     addDetailBtn.classList.add("disabled");
     editBtn.classList.add("disabled");
-    moveBtn.classList.add("disabled");
+    if (!moveModeActive) {
+      moveBtn.classList.add("disabled");
+    }
 
     partList.innerHTML = "<p>No machine selected.</p>";
   }
