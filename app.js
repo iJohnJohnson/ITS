@@ -483,21 +483,21 @@ document.addEventListener("keydown", (e) => {
   }
 
   // Ctrl + A + M for Add Machine
-  if (isPressed(["control", "a", "m"]) && !addMachineBtn.classList.contains("disabled")) {
+  if (isPressed(["control", "shift", "m"]) && !addMachineBtn.classList.contains("disabled")) {
     e.preventDefault();
     addMachineBtn.click();
     return;
   }
 
   // Ctrl + A + L for Add Machine Layer
-  if (isPressed(["control", "a", "l"]) && !addMachineLayerBtn.classList.contains("disabled")) {
+  if (isPressed(["control", "shift", "l"]) && !addMachineLayerBtn.classList.contains("disabled")) {
     e.preventDefault();
     addMachineLayerBtn.click();
     return;
   }
 
   // Ctrl + A + D for Add Machine Detail
-  if (isPressed(["control", "a", "d"]) && !addDetailBtn.classList.contains("disabled")) {
+  if (isPressed(["control", "shift", "d"]) && !addDetailBtn.classList.contains("disabled")) {
     e.preventDefault();
     addDetailBtn.click();
     return;
