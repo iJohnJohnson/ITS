@@ -1,8 +1,4 @@
-// app.js
-
-// =======================
-// Dark Mode Toggle Logic
-// =======================
+// Dark Theme Toggle
 function setThemeMode(mode) {
   if (mode === "dark") {
     document.body.classList.add("dark-theme");
@@ -18,13 +14,11 @@ function toggleTheme() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Load saved theme
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") {
     setThemeMode("dark");
   }
 
-  // Keyboard shortcut (Ctrl+D)
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.key.toLowerCase() === "d") {
       e.preventDefault();
@@ -32,28 +26,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Sidebar click toggle
   const sidebarToggle = document.getElementById("theme-toggle-sidebar");
   if (sidebarToggle) {
     sidebarToggle.addEventListener("click", toggleTheme);
   }
 });
 
-// =======================
-// Machine + Inventory Logic
-// =======================
-
-// DOM Elements
+// Machine System
 const machineList = document.getElementById("machine-list");
 const partList = document.getElementById("part-list");
 const deleteBtn = document.getElementById("delete-machine-btn");
+const addDetailBtn = document.getElementById("add-detail-btn");
 
-// In-memory store
 const machines = [];
-
 let selectedMachineIndex = null;
 
-// Create Machine List Item
 function renderMachineList() {
   machineList.innerHTML = "";
   machines.forEach((machine, index) => {
@@ -64,14 +51,16 @@ function renderMachineList() {
     div.addEventListener("click", () => {
       selectedMachineIndex = index;
       renderPartList(machine.parts);
+
+      // Enable buttons
       deleteBtn.classList.remove("disabled");
+      addDetailBtn.classList.remove("disabled");
     });
 
     machineList.appendChild(div);
   });
 }
 
-// Create Inventory Detail List (Right Container)
 function renderPartList(parts) {
   partList.innerHTML = "";
 
@@ -92,12 +81,22 @@ function renderPartList(parts) {
   });
 }
 
-// Add Machine
 document.getElementById("add-machine-btn").addEventListener("click", () => {
   const name = prompt("Enter Machine Name:");
   if (!name) return;
 
-  // Single initial part for now
+  const newMachine = {
+    name,
+    parts: []
+  };
+
+  machines.push(newMachine);
+  renderMachineList();
+});
+
+addDetailBtn.addEventListener("click", () => {
+  if (selectedMachineIndex === null) return;
+
   const partNumber = prompt("Enter Part Number:");
   if (!partNumber) return;
 
@@ -107,22 +106,16 @@ document.getElementById("add-machine-btn").addEventListener("click", () => {
   const location = prompt("Enter Location:");
   if (!location) return;
 
-  const newMachine = {
-    name,
-    parts: [
-      {
-        partNumber,
-        quantity,
-        location
-      }
-    ]
+  const part = {
+    partNumber,
+    quantity,
+    location
   };
 
-  machines.push(newMachine);
-  renderMachineList();
+  machines[selectedMachineIndex].parts.push(part);
+  renderPartList(machines[selectedMachineIndex].parts);
 });
 
-// Delete Machine
 deleteBtn.addEventListener("click", () => {
   if (selectedMachineIndex === null) return;
 
@@ -134,4 +127,5 @@ deleteBtn.addEventListener("click", () => {
   renderMachineList();
   partList.innerHTML = "";
   deleteBtn.classList.add("disabled");
+  addDetailBtn.classList.add("disabled");
 });
