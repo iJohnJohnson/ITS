@@ -1,4 +1,6 @@
-// Dark Theme Toggle
+// =======================
+// Dark Mode Toggle Logic
+// =======================
 function setThemeMode(mode) {
   if (mode === "dark") {
     document.body.classList.add("dark-theme");
@@ -19,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setThemeMode("dark");
   }
 
+  // Ctrl+D for dark mode
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.key.toLowerCase() === "d") {
       e.preventDefault();
@@ -32,7 +35,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Machine System
+// =======================
+// Machine + Inventory Logic
+// =======================
+
 const machineList = document.getElementById("machine-list");
 const partList = document.getElementById("part-list");
 const deleteBtn = document.getElementById("delete-machine-btn");
@@ -40,19 +46,23 @@ const addDetailBtn = document.getElementById("add-detail-btn");
 
 const machines = [];
 let selectedMachineIndex = null;
+let selectedPartIndex = null;
 
+// Render machine list in middle container
 function renderMachineList() {
   machineList.innerHTML = "";
+
   machines.forEach((machine, index) => {
     const div = document.createElement("div");
     div.classList.add("machine-card");
     div.textContent = machine.name;
 
-    div.addEventListener("click", () => {
+    div.addEventListener("click", (e) => {
+      e.stopPropagation(); // prevent global click
       selectedMachineIndex = index;
+      selectedPartIndex = null;
       renderPartList(machine.parts);
 
-      // Enable buttons
       deleteBtn.classList.remove("disabled");
       addDetailBtn.classList.remove("disabled");
     });
@@ -61,6 +71,7 @@ function renderMachineList() {
   });
 }
 
+// Render parts in right container
 function renderPartList(parts) {
   partList.innerHTML = "";
 
@@ -69,7 +80,7 @@ function renderPartList(parts) {
     return;
   }
 
-  parts.forEach((part) => {
+  parts.forEach((part, index) => {
     const partDiv = document.createElement("div");
     partDiv.classList.add("machine-card");
     partDiv.innerHTML = `
@@ -77,10 +88,18 @@ function renderPartList(parts) {
       <strong>Qty:</strong> ${part.quantity}<br>
       <strong>Loc:</strong> ${part.location}
     `;
+
+    partDiv.addEventListener("click", (e) => {
+      e.stopPropagation(); // prevent deselection
+      selectedPartIndex = index;
+      deleteBtn.classList.remove("disabled");
+    });
+
     partList.appendChild(partDiv);
   });
 }
 
+// Add a new machine
 document.getElementById("add-machine-btn").addEventListener("click", () => {
   const name = prompt("Enter Machine Name:");
   if (!name) return;
@@ -94,6 +113,7 @@ document.getElementById("add-machine-btn").addEventListener("click", () => {
   renderMachineList();
 });
 
+// Add detail to selected machine
 addDetailBtn.addEventListener("click", () => {
   if (selectedMachineIndex === null) return;
 
@@ -116,28 +136,41 @@ addDetailBtn.addEventListener("click", () => {
   renderPartList(machines[selectedMachineIndex].parts);
 });
 
+// Delete either machine or part depending on selection
 deleteBtn.addEventListener("click", () => {
-  if (selectedMachineIndex === null) return;
+  if (selectedPartIndex !== null && selectedMachineIndex !== null) {
+    const confirmPart = confirm("Delete this machine detail?");
+    if (!confirmPart) return;
 
-  const confirmed = confirm("Are you sure you want to delete this machine?");
-  if (!confirmed) return;
+    machines[selectedMachineIndex].parts.splice(selectedPartIndex, 1);
+    selectedPartIndex = null;
+    renderPartList(machines[selectedMachineIndex].parts);
+    deleteBtn.classList.add("disabled");
+    return;
+  }
 
-  machines.splice(selectedMachineIndex, 1);
-  selectedMachineIndex = null;
-  renderMachineList();
-  partList.innerHTML = "";
-  deleteBtn.classList.add("disabled");
-  addDetailBtn.classList.add("disabled");
+  if (selectedMachineIndex !== null) {
+    const confirmMachine = confirm("Delete this entire machine?");
+    if (!confirmMachine) return;
+
+    machines.splice(selectedMachineIndex, 1);
+    selectedMachineIndex = null;
+    selectedPartIndex = null;
+    renderMachineList();
+    partList.innerHTML = "<p>No machine selected.</p>";
+    deleteBtn.classList.add("disabled");
+    addDetailBtn.classList.add("disabled");
+  }
 });
 
-// Disable/Gray out buttons
+// Click outside: deselect all
 document.addEventListener("click", (e) => {
-  // Check if the click target is inside the machine list
   const isClickInsideMachineList = machineList.contains(e.target);
+  const isClickInsidePartList = partList.contains(e.target);
 
-  if (!isClickInsideMachineList) {
-    // Disable buttons and clear selection
+  if (!isClickInsideMachineList && !isClickInsidePartList) {
     selectedMachineIndex = null;
+    selectedPartIndex = null;
     deleteBtn.classList.add("disabled");
     addDetailBtn.classList.add("disabled");
     partList.innerHTML = "<p>No machine selected.</p>";
