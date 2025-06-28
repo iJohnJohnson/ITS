@@ -135,3 +135,14 @@ body.dark-theme .machine-card {
 body.dark-theme .machine-card:hover {
   background-color: #333;
 }
+
+
+#part-list .machine-card {
+  background-color: #f0f0f0;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+body.dark-theme #part-list .machine-card {
+  background-color: #1a1a1a;
+}
