@@ -129,3 +129,17 @@ deleteBtn.addEventListener("click", () => {
   deleteBtn.classList.add("disabled");
   addDetailBtn.classList.add("disabled");
 });
+
+// Disable/Gray out buttons
+document.addEventListener("click", (e) => {
+  // Check if the click target is inside the machine list
+  const isClickInsideMachineList = machineList.contains(e.target);
+
+  if (!isClickInsideMachineList) {
+    // Disable buttons and clear selection
+    selectedMachineIndex = null;
+    deleteBtn.classList.add("disabled");
+    addDetailBtn.classList.add("disabled");
+    partList.innerHTML = "<p>No machine selected.</p>";
+  }
+});
