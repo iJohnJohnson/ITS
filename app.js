@@ -27,116 +27,226 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const sidebarToggle = document.getElementById("theme-toggle-sidebar");
-  if (sidebarToggle) {
-    sidebarToggle.addEventListener("click", toggleTheme);
-  }
+  if (sidebarToggle) sidebarToggle.addEventListener("click", toggleTheme);
 });
 
 // =======================
-// Inventory Logic
+// Inventory Hierarchy Logic
 // =======================
+
 const machineList = document.getElementById("machine-list");
 const partList = document.getElementById("part-list");
 const deleteBtn = document.getElementById("delete-machine-btn");
+const addMachineBtn = document.getElementById("add-machine-btn");
+const addMachineLayerBtn = document.getElementById("add-machine-layer-btn");
 const addDetailBtn = document.getElementById("add-detail-btn");
 const editBtn = document.getElementById("edit-btn");
 const moveBtn = document.getElementById("move-btn");
 
 const machines = [];
-let selectedMachineIndex = null;
+
+let selectedParentIndex = null;
+let selectedChildIndex = null;
+let lastSelectedParentIndex = null;
+let lastSelectedChildIndex = null;
+
 let selectedPartIndex = null;
-let lastSelectedMachineIndex = null;
 let lastSelectedPartIndex = null;
+
 let moveModeActive = false;
 
 // =======================
-// Move Button Logic
+// Update buttons enable/disable based on selection
 // =======================
-moveBtn.addEventListener("click", () => {
-  moveModeActive = !moveModeActive;
-  moveBtn.classList.toggle("active", moveModeActive);
-  renderMachineList();
-  if (selectedMachineIndex !== null) {
-    renderPartList(machines[selectedMachineIndex].parts);
+function updateButtonsState() {
+  if (selectedParentIndex === null) {
+    // Nothing selected
+    deleteBtn.classList.add("disabled");
+    addMachineLayerBtn.classList.add("disabled");
+    addDetailBtn.classList.add("disabled");
+    editBtn.classList.add("disabled");
+  } else if (selectedChildIndex === null) {
+    // Parent selected
+    deleteBtn.classList.remove("disabled");
+    addMachineLayerBtn.classList.remove("disabled");  // can add child
+    addDetailBtn.classList.remove("disabled");        // add detail to parent
+    editBtn.classList.remove("disabled");
+  } else {
+    // Child selected
+    deleteBtn.classList.remove("disabled");
+    addMachineLayerBtn.classList.add("disabled");     // no grandchild for now
+    addDetailBtn.classList.remove("disabled");        // add detail to child
+    editBtn.classList.remove("disabled");
   }
-});
+
+  if (!moveModeActive) {
+    moveBtn.classList.remove("disabled");
+  }
+}
 
 // =======================
-// Render Machine List
+// Render Machine List (Parent and Children hierarchy)
 // =======================
 function renderMachineList() {
   machineList.innerHTML = "";
 
-  machines.forEach((machine, index) => {
-    const div = document.createElement("div");
-    div.classList.add("machine-card");
-    div.textContent = machine.name;
+  machines.forEach((parent, pIndex) => {
+    // Parent div
+    const parentDiv = document.createElement("div");
+    parentDiv.classList.add("machine-card");
+    parentDiv.textContent = parent.name;
 
-    if (index === selectedMachineIndex) {
-      div.classList.add("selected");
-    } else if (index === lastSelectedMachineIndex) {
-      div.classList.add("last-selected");
+    if (pIndex === selectedParentIndex && selectedChildIndex === null) {
+      parentDiv.classList.add("selected");
+    } else if (pIndex === lastSelectedParentIndex && selectedChildIndex === null) {
+      parentDiv.classList.add("last-selected");
     }
 
-    div.addEventListener("click", (e) => {
+    // Parent click
+    parentDiv.addEventListener("click", (e) => {
       e.stopPropagation();
-      lastSelectedMachineIndex = selectedMachineIndex;
-      selectedMachineIndex = index;
+
+      lastSelectedParentIndex = selectedParentIndex;
+      lastSelectedChildIndex = selectedChildIndex;
+      lastSelectedPartIndex = selectedPartIndex;
+
+      selectedParentIndex = pIndex;
+      selectedChildIndex = null;
       selectedPartIndex = null;
-      lastSelectedPartIndex = null;
 
-      document.querySelectorAll("#machine-list .machine-card").forEach(card => {
-        card.classList.remove("selected");
-      });
-      div.classList.add("selected");
+      document.querySelectorAll("#machine-list .machine-card").forEach(card => card.classList.remove("selected", "last-selected"));
+      parentDiv.classList.add("selected");
 
-      renderPartList(machine.parts);
-      deleteBtn.classList.remove("disabled");
-      addDetailBtn.classList.remove("disabled");
-      editBtn.classList.remove("disabled");
-      moveBtn.classList.remove("disabled");
+      // Show parts for parent
+      renderPartList(parent.parts || []);
+      updateButtonsState();
     });
 
+    // Drag & drop for parent machines
     if (moveModeActive) {
-      div.setAttribute("draggable", true);
+      parentDiv.setAttribute("draggable", true);
 
-      div.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("type", "machine");
-        e.dataTransfer.setData("fromIndex", index);
+      parentDiv.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("type", "parent");
+        e.dataTransfer.setData("fromIndex", pIndex);
       });
 
-      div.addEventListener("dragover", (e) => {
+      parentDiv.addEventListener("dragover", (e) => {
         e.preventDefault();
-        div.classList.add("drag-over");
+        parentDiv.classList.add("drag-over");
       });
 
-      div.addEventListener("dragleave", () => {
-        div.classList.remove("drag-over");
+      parentDiv.addEventListener("dragleave", () => {
+        parentDiv.classList.remove("drag-over");
       });
 
-      div.addEventListener("drop", (e) => {
+      parentDiv.addEventListener("drop", (e) => {
         e.preventDefault();
-        div.classList.remove("drag-over");
-
+        parentDiv.classList.remove("drag-over");
         const from = parseInt(e.dataTransfer.getData("fromIndex"));
-        const to = index;
+        const to = pIndex;
         if (from !== to) {
           const moved = machines.splice(from, 1)[0];
           machines.splice(to, 0, moved);
-          selectedMachineIndex = to;
+          selectedParentIndex = to;
+          selectedChildIndex = null;
           renderMachineList();
+          renderPartList(machines[to].parts || []);
+          updateButtonsState();
         }
       });
     } else {
-      div.removeAttribute("draggable");
+      parentDiv.removeAttribute("draggable");
     }
 
-    machineList.appendChild(div);
+    machineList.appendChild(parentDiv);
+
+    // Children list under parent (indented)
+    if (parent.children && parent.children.length > 0) {
+      parent.children.forEach((child, cIndex) => {
+        const childDiv = document.createElement("div");
+        childDiv.classList.add("machine-card");
+        childDiv.style.marginLeft = "20px";
+        childDiv.textContent = child.name;
+
+        if (pIndex === selectedParentIndex && cIndex === selectedChildIndex) {
+          childDiv.classList.add("selected");
+        } else if (pIndex === lastSelectedParentIndex && cIndex === lastSelectedChildIndex) {
+          childDiv.classList.add("last-selected");
+        }
+
+        // Child click
+        childDiv.addEventListener("click", (e) => {
+          e.stopPropagation();
+
+          lastSelectedParentIndex = selectedParentIndex;
+          lastSelectedChildIndex = selectedChildIndex;
+          lastSelectedPartIndex = selectedPartIndex;
+
+          selectedParentIndex = pIndex;
+          selectedChildIndex = cIndex;
+          selectedPartIndex = null;
+
+          document.querySelectorAll("#machine-list .machine-card").forEach(card => card.classList.remove("selected", "last-selected"));
+          childDiv.classList.add("selected");
+
+          // Show parts for child
+          renderPartList(child.parts || []);
+          updateButtonsState();
+        });
+
+        // Drag & drop for child machines
+        if (moveModeActive) {
+          childDiv.setAttribute("draggable", true);
+
+          childDiv.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("type", "child");
+            e.dataTransfer.setData("fromParentIndex", pIndex);
+            e.dataTransfer.setData("fromChildIndex", cIndex);
+          });
+
+          childDiv.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            childDiv.classList.add("drag-over");
+          });
+
+          childDiv.addEventListener("dragleave", () => {
+            childDiv.classList.remove("drag-over");
+          });
+
+          childDiv.addEventListener("drop", (e) => {
+            e.preventDefault();
+            childDiv.classList.remove("drag-over");
+
+            const fromParent = parseInt(e.dataTransfer.getData("fromParentIndex"));
+            const fromChild = parseInt(e.dataTransfer.getData("fromChildIndex"));
+            const toParent = pIndex;
+            const toChild = cIndex;
+
+            if (fromParent === toParent && fromChild !== toChild) {
+              const siblings = machines[toParent].children;
+              const moved = siblings.splice(fromChild, 1)[0];
+              siblings.splice(toChild, 0, moved);
+              selectedParentIndex = toParent;
+              selectedChildIndex = toChild;
+              renderMachineList();
+              renderPartList(siblings[toChild].parts || []);
+              updateButtonsState();
+            }
+          });
+        } else {
+          childDiv.removeAttribute("draggable");
+        }
+
+        machineList.appendChild(childDiv);
+      });
+    }
   });
+  updateButtonsState();
 }
 
 // =======================
-// Render Part List
+// Render Parts (for selected machine)
 // =======================
 function renderPartList(parts) {
   partList.innerHTML = "";
@@ -164,12 +274,11 @@ function renderPartList(parts) {
 
     partDiv.addEventListener("click", (e) => {
       e.stopPropagation();
+
       lastSelectedPartIndex = selectedPartIndex;
       selectedPartIndex = index;
 
-      partList.querySelectorAll(".machine-card").forEach(card => {
-        card.classList.remove("selected");
-      });
+      partList.querySelectorAll(".machine-card").forEach(card => card.classList.remove("selected"));
       partDiv.classList.add("selected");
 
       deleteBtn.classList.remove("disabled");
@@ -177,6 +286,7 @@ function renderPartList(parts) {
       moveBtn.classList.remove("disabled");
     });
 
+    // Drag & drop for parts
     if (moveModeActive) {
       partDiv.setAttribute("draggable", true);
 
@@ -200,12 +310,21 @@ function renderPartList(parts) {
 
         const from = parseInt(e.dataTransfer.getData("fromIndex"));
         const to = index;
-        if (from !== to && selectedMachineIndex !== null) {
-          const partListArr = machines[selectedMachineIndex].parts;
-          const moved = partListArr.splice(from, 1)[0];
-          partListArr.splice(to, 0, moved);
+        if (from !== to) {
+          // Identify correct parts array
+          let partsArr = null;
+          if (selectedChildIndex !== null) {
+            partsArr = machines[selectedParentIndex].children[selectedChildIndex].parts;
+          } else {
+            partsArr = machines[selectedParentIndex].parts;
+          }
+          if (!partsArr) return;
+
+          const moved = partsArr.splice(from, 1)[0];
+          partsArr.splice(to, 0, moved);
           selectedPartIndex = to;
-          renderPartList(partListArr);
+          renderPartList(partsArr);
+          updateButtonsState();
         }
       });
     } else {
@@ -217,73 +336,164 @@ function renderPartList(parts) {
 }
 
 // =======================
-// Add Machine
+// Move Button Toggle
 // =======================
-document.getElementById("add-machine-btn").addEventListener("click", () => {
-  const name = prompt("Enter Machine Name:");
-  if (!name) return;
+moveBtn.addEventListener("click", () => {
+  moveModeActive = !moveModeActive;
+  moveBtn.classList.toggle("active", moveModeActive);
 
-  machines.push({ name, parts: [] });
+  // When move mode is active, disable other buttons except moveBtn itself
+  if (moveModeActive) {
+    deleteBtn.classList.add("disabled");
+    addMachineBtn.classList.add("disabled");
+    addMachineLayerBtn.classList.add("disabled");
+    addDetailBtn.classList.add("disabled");
+    editBtn.classList.add("disabled");
+  } else {
+    updateButtonsState();
+  }
+
   renderMachineList();
+
+  // Refresh parts list with drag enabled/disabled
+  if (selectedParentIndex !== null) {
+    if (selectedChildIndex !== null) {
+      renderPartList(machines[selectedParentIndex].children[selectedChildIndex].parts || []);
+    } else {
+      renderPartList(machines[selectedParentIndex].parts || []);
+    }
+  }
 });
 
 // =======================
-// Add Detail
+// Add Parent Machine
+// =======================
+addMachineBtn.addEventListener("click", () => {
+  if (moveModeActive) return; // prevent add while moving
+  const parentName = prompt("Enter Parent Machine Name:");
+  if (!parentName) return;
+  machines.push({ name: parentName, children: [], parts: [] });
+  renderMachineList();
+  updateButtonsState();
+});
+
+// =======================
+// Add Child Machine Layer
+// =======================
+addMachineLayerBtn.addEventListener("click", () => {
+  if (moveModeActive) return;
+  if (selectedParentIndex === null) return;
+
+  const childName = prompt("Enter Child Machine Name:");
+  if (!childName) return;
+
+  if (!machines[selectedParentIndex].children) {
+    machines[selectedParentIndex].children = [];
+  }
+  machines[selectedParentIndex].children.push({ name: childName, parts: [] });
+  renderMachineList();
+  updateButtonsState();
+});
+
+// =======================
+// Add Machine Detail (part) to selected machine (parent or child)
 // =======================
 addDetailBtn.addEventListener("click", () => {
-  if (selectedMachineIndex === null) return;
+  if (moveModeActive) return;
+  if (selectedParentIndex === null) return;
 
   const partNumber = prompt("Enter Part Number:");
   if (!partNumber) return;
-
   const quantity = prompt("Enter Quantity:");
   if (!quantity) return;
-
   const location = prompt("Enter Location:");
   if (!location) return;
 
-  machines[selectedMachineIndex].parts.push({ partNumber, quantity, location });
-  renderPartList(machines[selectedMachineIndex].parts);
+  if (selectedChildIndex === null) {
+    const parent = machines[selectedParentIndex];
+    if (!parent.parts) parent.parts = [];
+    parent.parts.push({ partNumber, quantity, location });
+    renderPartList(parent.parts);
+  } else {
+    const child = machines[selectedParentIndex].children[selectedChildIndex];
+    if (!child.parts) child.parts = [];
+    child.parts.push({ partNumber, quantity, location });
+    renderPartList(child.parts);
+  }
+  updateButtonsState();
 });
 
 // =======================
-// Delete Logic
+// Delete Button Logic
 // =======================
 deleteBtn.addEventListener("click", () => {
-  if (selectedPartIndex !== null && selectedMachineIndex !== null) {
+  if (moveModeActive) return;
+
+  if (selectedPartIndex !== null && selectedParentIndex !== null) {
     const confirmPart = confirm("Delete this machine detail?");
     if (!confirmPart) return;
 
-    machines[selectedMachineIndex].parts.splice(selectedPartIndex, 1);
+    let partsArr = null;
+    if (selectedChildIndex !== null) {
+      partsArr = machines[selectedParentIndex].children[selectedChildIndex].parts;
+    } else {
+      partsArr = machines[selectedParentIndex].parts;
+    }
+
+    if (!partsArr || partsArr.length === 0) return;
+
+    partsArr.splice(selectedPartIndex, 1);
     selectedPartIndex = null;
-    renderPartList(machines[selectedMachineIndex].parts);
+    renderPartList(partsArr);
     deleteBtn.classList.add("disabled");
     editBtn.classList.add("disabled");
+    updateButtonsState();
     return;
   }
 
-  if (selectedMachineIndex !== null) {
-    const confirmMachine = confirm("Delete this entire machine?");
-    if (!confirmMachine) return;
+  if (selectedParentIndex !== null) {
+    if (selectedChildIndex !== null) {
+      const confirmChild = confirm("Delete this child machine?");
+      if (!confirmChild) return;
 
-    machines.splice(selectedMachineIndex, 1);
-    selectedMachineIndex = null;
-    selectedPartIndex = null;
-    renderMachineList();
-    partList.innerHTML = "<p>No machine selected.</p>";
-    deleteBtn.classList.add("disabled");
-    addDetailBtn.classList.add("disabled");
-    editBtn.classList.add("disabled");
-    moveBtn.classList.add("disabled");
+      machines[selectedParentIndex].children.splice(selectedChildIndex, 1);
+      selectedChildIndex = null;
+      selectedPartIndex = null;
+      renderMachineList();
+      partList.innerHTML = "<p>No machine selected.</p>";
+      updateButtonsState();
+    } else {
+      const confirmParent = confirm("Delete this entire parent machine?");
+      if (!confirmParent) return;
+
+      machines.splice(selectedParentIndex, 1);
+      selectedParentIndex = null;
+      selectedChildIndex = null;
+      selectedPartIndex = null;
+      renderMachineList();
+      partList.innerHTML = "<p>No machine selected.</p>";
+      updateButtonsState();
+    }
   }
 });
 
 // =======================
-// Edit Logic
+// Edit Button Logic
 // =======================
 editBtn.addEventListener("click", () => {
-  if (selectedPartIndex !== null && selectedMachineIndex !== null) {
-    const part = machines[selectedMachineIndex].parts[selectedPartIndex];
+  if (moveModeActive) return;
+
+  if (selectedPartIndex !== null && selectedParentIndex !== null) {
+    let partsArr = null;
+    if (selectedChildIndex !== null) {
+      partsArr = machines[selectedParentIndex].children[selectedChildIndex].parts;
+    } else {
+      partsArr = machines[selectedParentIndex].parts;
+    }
+
+    if (!partsArr || partsArr.length === 0) return;
+
+    const part = partsArr[selectedPartIndex];
 
     const newPartNumber = prompt("Edit Part Number:", part.partNumber);
     if (!newPartNumber) return;
@@ -295,17 +505,31 @@ editBtn.addEventListener("click", () => {
     if (!newLoc) return;
 
     Object.assign(part, { partNumber: newPartNumber, quantity: newQty, location: newLoc });
-    renderPartList(machines[selectedMachineIndex].parts);
+    renderPartList(partsArr);
+    updateButtonsState();
     return;
   }
 
-  if (selectedMachineIndex !== null) {
-    const machine = machines[selectedMachineIndex];
-    const newName = prompt("Edit Machine Name:", machine.name);
-    if (!newName) return;
+  if (selectedParentIndex !== null) {
+    if (selectedChildIndex !== null) {
+      // Edit child machine name
+      const child = machines[selectedParentIndex].children[selectedChildIndex];
+      const newName = prompt("Edit Child Machine Name:", child.name);
+      if (!newName) return;
 
-    machine.name = newName;
-    renderMachineList();
+      child.name = newName;
+      renderMachineList();
+      updateButtonsState();
+    } else {
+      // Edit parent machine name
+      const parent = machines[selectedParentIndex];
+      const newName = prompt("Edit Parent Machine Name:", parent.name);
+      if (!newName) return;
+
+      parent.name = newName;
+      renderMachineList();
+      updateButtonsState();
+    }
   }
 });
 
@@ -317,17 +541,20 @@ document.addEventListener("click", (e) => {
   const isInsidePart = partList.contains(e.target);
 
   if (!isInsideMachine && !isInsidePart) {
-    lastSelectedMachineIndex = selectedMachineIndex;
+    lastSelectedParentIndex = selectedParentIndex;
+    lastSelectedChildIndex = selectedChildIndex;
     lastSelectedPartIndex = selectedPartIndex;
 
-    selectedMachineIndex = null;
+    selectedParentIndex = null;
+    selectedChildIndex = null;
     selectedPartIndex = null;
 
     document.querySelectorAll(".machine-card").forEach(card => {
-      card.classList.remove("selected");
+      card.classList.remove("selected", "last-selected");
     });
 
     deleteBtn.classList.add("disabled");
+    addMachineLayerBtn.classList.add("disabled");
     addDetailBtn.classList.add("disabled");
     editBtn.classList.add("disabled");
     if (!moveModeActive) {
@@ -337,3 +564,8 @@ document.addEventListener("click", (e) => {
     partList.innerHTML = "<p>No machine selected.</p>";
   }
 });
+
+// Initial render on load
+renderMachineList();
+partList.innerHTML = "<p>No machine selected.</p>";
+updateButtonsState();
